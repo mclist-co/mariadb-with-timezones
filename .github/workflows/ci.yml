@@ -1,0 +1,37 @@
+name: publish docker images
+
+
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        mariadb_version: [10.5, 10.6.11, latest]
+    steps:
+
+      - name: Echo build info
+        run: echo "Building ${{ matrix.mariadb_version }}"
+
+      - uses: actions/checkout@v2
+
+      - name: Build Docker Image
+        run: |
+          docker build \
+            --build-arg MARIADB_VERSION=${{ matrix.mariadb_version }} \
+            --tag ${{ secrets.DOCKER_HUB_PREFIX }}mariadb-with-timezones:${{ matrix.mariadb_version }} \
+            .
+
+      - name: Login to Docker
+        if: github.ref == 'refs/heads/master'
+        run: echo $DOCKER_PASS | docker login $DOCKER_URL -u $DOCKER_USER --password-stdin
+        env:
+          DOCKER_USER: ${{ secrets.DOCKER_HUB_USERNAME }}
+          DOCKER_PASS: ${{ secrets.DOCKER_HUB_PASSWORD }}
+          DOCKER_URL: ${{ secrets.DOCKER_HUB_URL }}
+
+      - name: Push Docker Image
+        if: github.ref == 'refs/heads/master'
+        run: docker push ${{ secrets.DOCKER_HUB_PREFIX }}mariadb-with-timezones --all-tags
