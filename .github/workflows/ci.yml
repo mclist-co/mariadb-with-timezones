@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        mariadb_version: [10.5, 10.6.11, latest]
+        mariadb_version: [10.5, 10.6.11, 10.11.5, latest, lts]
     steps:
 
       - name: Echo build info
